@@ -17,7 +17,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const fileData = fs.readFileSync(dataFilePath, 'utf8');
-  let expenses: Expense[] = fileData ? JSON.parse(fileData) : [];
+  const expenses: Expense[] = fileData ? JSON.parse(fileData) : [];
 
   if (req.method === 'GET') {
     return res.status(200).json(expenses);

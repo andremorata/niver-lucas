@@ -5,14 +5,13 @@ import { CssBaseline } from '@mui/material';
 
 const queryClient = new QueryClient();
 
-function MyApp({ Component, pageProps }: AppProps) {
+function NextApp({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      {/* MUI baseline */}
       <CssBaseline />
       <Component {...pageProps} />
     </QueryClientProvider>
   );
 }
 
-export default MyApp;
+export default NextApp;

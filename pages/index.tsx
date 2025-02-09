@@ -47,14 +47,17 @@ export default function Home() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   // Buscar despesas
-  const { data: expenses, isLoading } = useQuery<Expense[]>(['expenses'], async () => {
-    const res = await fetch('/api/expenses');
-    return res.json();
+  const { data: expenses, isLoading } = useQuery<Expense[]>({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const res = await fetch('/api/expenses');
+      return res.json();
+    }
   });
 
-  // Mutação para adicionar despesa
-  const addExpenseMutation = useMutation(
-    async (newExpense: Omit<Expense, 'id'>) => {
+  // Adicionar despesa
+  const addExpenseMutation = useMutation({
+    mutationFn: async (newExpense: Omit<Expense, 'id'>) => {
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,14 +65,12 @@ export default function Home() {
       });
       return res.json();
     },
-    {
-      onSuccess: () => queryClient.invalidateQueries(['expenses'])
-    }
-  );
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['expenses']})
+  });
 
-  // Mutation para atualizar despesa
-  const updateExpenseMutation = useMutation(
-    async (expense: Expense) => {
+  // Atualizar despesa
+  const updateExpenseMutation = useMutation({
+    mutationFn: async (expense: Expense) => {
       const res = await fetch(`/api/expenses/${expense.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -77,27 +78,24 @@ export default function Home() {
       });
       return res.json();
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['expenses']);
-        setEditingExpenseId(null);
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses']});
+      setEditingExpenseId(null);
     }
-  );
+  });
 
-  // Nova mutation para excluir despesa
-  const deleteExpenseMutation = useMutation(
-    async (id: number) => {
+  // Deletar despesa
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: number) => {
       const res = await fetch(`/api/expenses/${id}`, {
         method: 'DELETE'
       });
       return res.json();
     },
-    {
-      onSuccess: () => queryClient.invalidateQueries(['expenses'])
-    }
-  );
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['expenses']})
+  });
 
+  // Função para adicionar despesa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Impedir salvar se descrição vazia ou valor zero
@@ -159,7 +157,7 @@ export default function Home() {
           </Button>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="sm" className="p-4">
+      <Container maxWidth="sm" className="p-4 mt-4">
         <Box component="form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           <TextField
             label="Descrição"
@@ -174,7 +172,7 @@ export default function Home() {
             onChange={(e) => setValue(Number(e.target.value))}
             fullWidth
           />
-          <Button variant="contained" type="submit">
+          <Button variant="contained" type="submit" className='w-full mt-4'>
             Adicionar
           </Button>
         </Box>

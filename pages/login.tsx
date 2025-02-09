@@ -26,10 +26,10 @@ export default function Login() {
 
   return (
     <Container maxWidth="sm" className="p-4">
-      <Typography variant="h5" className="text-center mb-4">
+      <Typography variant="h4" className="text-center mb-4">
         Login
       </Typography>
-      <Box component="form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <Box component="form" onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
         <TextField
           label="Senha"
           type="password"
@@ -37,7 +37,7 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           fullWidth
         />
-        {error && <Typography color="error">{error}</Typography>}
+        {error && <Typography color="error" className='text-center'>{error}</Typography>}
         <Button variant="contained" type="submit">
           Entrar
         </Button>
