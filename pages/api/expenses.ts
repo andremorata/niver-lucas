@@ -11,11 +11,13 @@ interface Expense {
 }
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  let expenses: Expense[] = [];
-  if (fs.existsSync(dataFilePath)) {
-    const fileData = fs.readFileSync(dataFilePath, 'utf8');
-    expenses = fileData ? JSON.parse(fileData) : [];
+  // If expenses.json doesn't exist, create it with an empty array
+  if (!fs.existsSync(dataFilePath)) {
+    fs.writeFileSync(dataFilePath, JSON.stringify([], null, 2));
   }
+
+  const fileData = fs.readFileSync(dataFilePath, 'utf8');
+  let expenses: Expense[] = fileData ? JSON.parse(fileData) : [];
 
   if (req.method === 'GET') {
     return res.status(200).json(expenses);
