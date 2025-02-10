@@ -4,6 +4,7 @@ import { Container, TextField, Button, Typography, Box } from '@mui/material';
 
 export default function Login() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -12,7 +13,7 @@ export default function Login() {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+      body: JSON.stringify({ username, password })
     });
     const data = await res.json();
     if (data.success) {
@@ -30,6 +31,12 @@ export default function Login() {
         Login
       </Typography>
       <Box component="form" onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
+        <TextField
+          label="Usuário"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          fullWidth
+        />
         <TextField
           label="Senha"
           type="password"

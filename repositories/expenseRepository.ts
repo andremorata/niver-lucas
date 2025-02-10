@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { BaseRepository } from './baseRepository';
 
 export interface Expense {
   id: number;
@@ -6,50 +6,46 @@ export interface Expense {
   value: number;
 }
 
-const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'example',
-  database: process.env.PGDATABASE || 'niver_db',
-  port: Number(process.env.PGPORT) || 5432,
-});
+export class ExpenseRepository extends BaseRepository {
+  constructor() {
+    super();
+    this.pool.query(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id SERIAL PRIMARY KEY,
+        description TEXT NOT NULL,
+        value NUMERIC NOT NULL
+      );
+    `);
+  }
 
-// Create table if it doesn't exist
-pool.query(`
-  CREATE TABLE IF NOT EXISTS expenses (
-    id SERIAL PRIMARY KEY,
-    description TEXT NOT NULL,
-    value NUMERIC NOT NULL
-  );
-`);
+  async getExpenses(): Promise<Expense[]> {
+    const res = await this.query('SELECT id, description, value FROM expenses');
+    return res.rows.map(exp => ({ ...exp, value: Number(exp.value) }));
+  }
 
-export const getExpenses = async (): Promise<Expense[]> => {
-  const res = await pool.query('SELECT id, description, value FROM expenses');
-  return res.rows;
-};
+  async getExpenseById(id: number): Promise<Expense | null> {
+    const res = await this.query('SELECT id, description, value FROM expenses WHERE id = $1', [id]);
+    return res.rows[0] ? { ...res.rows[0], value: Number(res.rows[0].value) } : null;
+  }
 
-export const getExpenseById = async (id: number): Promise<Expense | null> => {
-  const res = await pool.query('SELECT id, description, value FROM expenses WHERE id = $1', [id]);
-  return res.rows[0] || null;
-};
+  async createExpense(description: string, value: number): Promise<Expense> {
+    const res = await this.query(
+      'INSERT INTO expenses (description, value) VALUES ($1, $2) RETURNING *',
+      [description, value]
+    );
+    return { ...res.rows[0], value: Number(res.rows[0].value) };
+  }
 
-export const createExpense = async (description: string, value: number): Promise<Expense> => {
-  const res = await pool.query(
-    'INSERT INTO expenses (description, value) VALUES ($1, $2) RETURNING *',
-    [description, value]
-  );
-  return res.rows[0];
-};
+  async updateExpense(id: number, description: string, value: number): Promise<Expense | null> {
+    const res = await this.query(
+      'UPDATE expenses SET description = $1, value = $2 WHERE id = $3 RETURNING *',
+      [description, value, id]
+    );
+    return res.rows[0] ? { ...res.rows[0], value: Number(res.rows[0].value) } : null;
+  }
 
-export const updateExpense = async (id: number, description: string, value: number): Promise<Expense | null> => {
-  const res = await pool.query(
-    'UPDATE expenses SET description = $1, value = $2 WHERE id = $3 RETURNING *',
-    [description, value, id]
-  );
-  return res.rows[0] || null;
-};
-
-export const deleteExpense = async (id: number): Promise<boolean> => {
-  const res = await pool.query('DELETE FROM expenses WHERE id = $1', [id]);
-  return res.rowCount > 0;
-};
+  async deleteExpense(id: number): Promise<boolean> {
+    const res = await this.query('DELETE FROM expenses WHERE id = $1', [id]);
+    return (res.rowCount ?? 0) > 0;
+  }
+}
