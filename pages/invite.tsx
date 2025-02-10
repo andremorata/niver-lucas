@@ -62,6 +62,10 @@ export default function InvitePage() {
   // NEW state for age field refs:
   const [otherGuestAgeRefs, setOtherGuestAgeRefs] = useState<React.RefObject<HTMLInputElement | null>[]>([]);
 
+  // NEW state for alert modal
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
   const handleMainGuestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setMainGuest(prev => ({
@@ -100,10 +104,20 @@ export default function InvitePage() {
   // Updated handleSubmit to open modal
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // NEW validation: check if main guest's full name has at least two words
+    if (mainGuest.fullName.trim().split(/\s+/).length < 2) {
+      setAlertMessage('Por favor, insira o nome completo do convidado principal (pelo menos nome e sobrenome).');
+      setAlertModalOpen(true);
+      mainInputRef.current?.focus();
+      return;
+    }
+
     // New validation: focus the first age field that's empty when a guest has a name.
     const invalidIndex = otherGuests.findIndex(guest => guest.fullName && !guest.age);
     if (invalidIndex !== -1) {
-      alert('Para cada convidado informado, insira também a idade.');
+      setAlertMessage('Para cada convidado informado, insira também a idade.');
+      setAlertModalOpen(true);
       otherGuestAgeRefs[invalidIndex]?.current?.focus();
       return;
     }
@@ -117,7 +131,10 @@ export default function InvitePage() {
       const response = await fetch('/api/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mainGuest, otherGuests }),
+        body: JSON.stringify({ 
+          mainGuest, 
+          otherGuests: otherGuests.filter(guest => guest.fullName.trim() !== '') 
+        }),
       });
       if (!response.ok) throw new Error('Error submitting invite');
       const result = await response.json();
@@ -133,7 +150,8 @@ export default function InvitePage() {
       }, 5000);
     } catch (error) {
       console.error('Error:', error);
-      alert('Erro ao confirmar presença. Tente novamente.');
+      setAlertMessage('Erro ao confirmar presença. Tente novamente.');
+      setAlertModalOpen(true);
     }
   };
 
@@ -380,6 +398,19 @@ export default function InvitePage() {
           <Button onClick={() => setConfirmModalOpen(false)}>Cancelar</Button>
           <Button onClick={handleConfirm} variant="contained" autoFocus>
             Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Alert Modal */}
+      <Dialog open={alertModalOpen} onClose={() => setAlertModalOpen(false)}>
+        <DialogTitle>Atenção</DialogTitle>
+        <DialogContent>
+          <Typography>{alertMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAlertModalOpen(false)} color="primary">
+            OK
           </Button>
         </DialogActions>
       </Dialog>
