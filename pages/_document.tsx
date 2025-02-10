@@ -1,10 +1,14 @@
-import Document, { Head, Html, Main, NextScript } from "next/document";
+import Document, { Html, Head, Main, NextScript } from 'next/document';
 
-export default class MyDocument extends Document {
+class MyDocument extends Document {
   render() {
     return (
       <Html lang="en">
         <Head>
+          <link
+            href="https://fonts.googleapis.com/css2?family=Chewy&display=swap"
+            rel="stylesheet"
+          />
           <meta name="description" content="A simple expense tracker" />
         </Head>
         <body>
@@ -15,6 +19,8 @@ export default class MyDocument extends Document {
     );
   }
 }
+
+export default MyDocument;
 
 MyDocument.getInitialProps = async (ctx) => {
   const originalRenderPage = ctx.renderPage;
