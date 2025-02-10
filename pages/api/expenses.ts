@@ -1,35 +1,13 @@
-import fs from 'fs';
-import path from 'path';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getExpenses, createExpense } from '../../repositories/expenseRepository';
 
-const dataFilePath = path.join(process.cwd(), 'data', 'expenses.json');
-
-interface Expense {
-  id: number;
-  description: string;
-  value: number;
-}
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // If expenses.json doesn't exist, create it with an empty array
-  if (!fs.existsSync(dataFilePath)) {
-    fs.writeFileSync(dataFilePath, JSON.stringify([], null, 2));
-  }
-
-  const fileData = fs.readFileSync(dataFilePath, 'utf8');
-  const expenses: Expense[] = fileData ? JSON.parse(fileData) : [];
-
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
+    const expenses = await getExpenses();
     return res.status(200).json(expenses);
   } else if (req.method === 'POST') {
     const { description, value } = req.body as { description: string; value: number };
-    const newExpense: Expense = {
-      id: expenses.length ? expenses[expenses.length - 1].id + 1 : 1,
-      description,
-      value: Number(value)
-    };
-    expenses.push(newExpense);
-    fs.writeFileSync(dataFilePath, JSON.stringify(expenses, null, 2));
+    const newExpense = await createExpense(description, Number(value));
     return res.status(201).json(newExpense);
   } else {
     return res.status(405).json({ message: 'Method not allowed' });
